@@ -1,10 +1,15 @@
-import { design, paint, WIDTH } from './design.js';
+import { design, packTextMask, paint, WIDTH } from './design.js';
 
 export const FONTS = {
   affiche: '900 90px Impact, "Arial Black", sans-serif',
   bloc: '900 90px "Arial Black", system-ui, sans-serif',
   machine: 'bold 90px "Courier New", monospace',
   journal: 'bold 90px Georgia, serif',
+  'pixelify-sans': '400 90px "Pixelify Sans", monospace',
+  silkscreen: '400 90px Silkscreen, monospace',
+  'press-start-2p': '400 90px "Press Start 2P", monospace',
+  tiny5: '400 90px Tiny5, monospace',
+  vt323: '400 90px VT323, monospace',
 };
 
 export function textMask(text, width, height, face = 'affiche') {
@@ -36,15 +41,22 @@ export function* stamp(mask, left, top, color) {
   }
 }
 
-export function sample() {
+export function sample(editable = true) {
   const p = design(204, undefined, 'On tisse la lutte');
   const red = document.createElement('canvas');
   red.width = WIDTH; red.height = 76;
   const rc = red.getContext('2d', { willReadFrequently: true });
   rc.fillRect(5, 6, 170, 66);
   rc.globalCompositeOperation = 'destination-out';
-  rc.drawImage(asCanvas(textMask('ON TISSE', 153, 25)), 13, 12);
-  rc.drawImage(asCanvas(textMask('LA LUTTE', 153, 29)), 13, 37);
+  const headline = [
+    { text: 'ON TISSE', x: 13, y: 12, width: 153, height: 25, font: 'affiche', color: 0 },
+    { text: 'LA LUTTE', x: 13, y: 37, width: 153, height: 29, font: 'affiche', color: 0 },
+  ];
+  if (!editable) {
+    for (const { text, x, y, width, height, font } of headline) {
+      rc.drawImage(asCanvas(textMask(text, width, height, font)), x, y);
+    }
+  }
   let random = 232;
   function jitter(n) { random = (random * 1664525 + 1013904223) >>> 0; return random % n; }
   for (let i = 0; i < 420; i++) rc.fillRect(5 + jitter(170), 6 + jitter(66), 1 + (i % 17 === 0), 1);
@@ -74,9 +86,25 @@ export function sample() {
     c.fillRect(x, y, 1, 1);
   }
   c.fillRect(12, 103, 156, 1);
-  c.drawImage(asCanvas(textMask('MAILLE APRÈS MAILLE', 145, 10, 'machine')), 17, 107);
+  const caption = { text: 'MAILLE APRÈS MAILLE', x: 17, y: 183, width: 145, height: 10, font: 'machine', color: 2 };
+  if (!editable) c.drawImage(asCanvas(textMask(caption.text, caption.width, caption.height, caption.font)), caption.x, caption.y - 76);
   paint(p, stamp(c.getImageData(0, 0, WIDTH, 128), 0, 76, 2));
+  if (editable) {
+    p.layers = [...headline, caption].map(layer => ({
+      ...layer, type: 'text', mask: packTextMask(textMask(layer.text, layer.width, layer.height, layer.font)),
+    }));
+  }
   return p;
+}
+
+export function upgradeSample(project) {
+  if (project.layers.length || project.name !== 'On tisse la lutte' || project.height !== 204 || project.palette.length < 3) {
+    return project;
+  }
+  const original = sample(false);
+  if (!project.pixels.every((color, i) => original.pixels[i] === color)) return project;
+  const editable = sample();
+  return { ...project, pixels: editable.pixels, layers: editable.layers };
 }
 
 function asCanvas(mask) {
