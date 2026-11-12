@@ -1,0 +1,74 @@
+name: Deploy to OVH
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ovh-politicayab
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the atelier
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+
+      - name: Test the atelier
+        run: npm test
+
+      - name: Package the static site
+        run: |
+          mkdir -p .preview/ovh
+          git archive HEAD index.html style.css mark.svg src | tar -x -C .preview/ovh
+
+      - name: Check deployment configuration
+        id: credentials
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          if [[ -n "$FTP_SERVER" && -n "$FTP_USER" && -n "$FTP_PASSWORD" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "::error::Set FTP_SERVER, FTP_USER and FTP_PASSWORD before deploying."
+            exit 1
+          else
+            echo "::notice::OVH credentials are pending. Skipping the upload."
+          fi
+
+      - name: Upload the atelier
+        if: steps.credentials.outputs.configured == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          local-dir: ./.preview/ovh/
+          # The FTP account is rooted in www/politicayab.
+          server-dir: ./
+
+      - name: Verify the public site
+        if: steps.credentials.outputs.configured == 'true'
+        run: |
+          base=https://juliendorra.com/politicayab
+          for asset in index.html style.css src/app.js src/design.js src/data/yarn-swatches.tsv src/fonts/tiny5.ttf; do
+            curl --fail --silent --show-error --retry 4 --retry-all-errors --retry-delay 3 \
+              "$base/$asset?revision=$GITHUB_SHA" --output .preview/download
+            cmp ".preview/ovh/$asset" .preview/download
+          done

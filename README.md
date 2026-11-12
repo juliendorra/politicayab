@@ -14,6 +14,13 @@ jusqu’à `Ctrl+C`. Node.js 22 suffit, sans dépendance à installer.
 Le projet est un site statique : un hébergeur peut servir
 `index.html`, `style.css`, `mark.svg` et `src/` ensemble.
 
+Le workflow [Deploy to OVH](.github/workflows/deploy.yml) publie ces fichiers
+depuis `main` vers [juliendorra.com/politicayab/](https://juliendorra.com/politicayab/).
+Il utilise les secrets GitHub Actions `FTP_SERVER`, `FTP_USER` et
+`FTP_PASSWORD`. Le compte OVH doit avoir `www/politicayab` comme dossier racine,
+ce qui correspond à `./` dans le workflow. Le workflow peut aussi être lancé
+manuellement depuis GitHub Actions.
+
 - **Dessin** : crayon (B), gomme (E), remplissage (G), pipette (I). Ajustez la
   hauteur dans le panneau de droite. Zoomer permet de voir la grille de mailles.
   Avec **Remplir**, choisissez un aplat, un damier, des pois, des rayures ou
