@@ -50,7 +50,13 @@
         <button id="load-sample"><svg class="icon"><use href="#i-knit"/></svg> Charger l’exemple</button>
       </div>
     </details>
-    <button class="primary" id="export"><svg class="icon"><use href="#i-download"/></svg> Exporter PNG</button>
+    <details class="export-menu">
+      <summary class="primary"><svg class="icon"><use href="#i-download"/></svg> Exporter PNG <svg class="icon chevron"><use href="#i-chevron"/></svg></summary>
+      <div class="menu">
+        <button id="export">PNG couleur</button>
+        <button id="export-ayab">PNG noir et blanc (AYAB)</button>
+      </div>
+    </details>
   </div>
 </header>
 <main class="shell">
@@ -221,8 +227,7 @@
           <div><strong>Sur le carton</strong><p>Voyez le relief des mailles et le rendu des fils.</p><button class="link-button" id="show-knit">Ouvrir l’aperçu <span aria-hidden="true">↗</span></button></div>
         </div>
         <div id="knit-controls" hidden>
-          <div class="brush-label"><label for="ratio">Hauteur d’une maille</label><output id="ratio-label" for="ratio">0,85×</output></div>
-          <input id="ratio" type="range" min="60" max="130" value="85">
+          <div class="dimension"><span>Hauteur / largeur · AYAB</span><strong>4:5</strong></div>
           <label class="field yarn">Aspect du fil <select id="finish"><option value="mat">Mat</option><option value="brillant">Brillant</option></select></label>
         </div>
       </div>

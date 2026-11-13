@@ -43,7 +43,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .quiet:hover { background: #36392e; }
 summary::-webkit-details-marker { display: none; }
 .chevron { width: 12px; height: 12px; }
-.project-menu { position: relative; }
+.project-menu, .export-menu { position: relative; }
+.export-menu summary { cursor: pointer; }
 .menu { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; width: 220px; background: var(--paper); color: var(--ink); border-radius: 7px; padding: 5px; border: 1px solid var(--line); box-shadow: 0 10px 26px #28281c28; }
 .menu button { display: flex; width: 100%; align-items: center; gap: 10px; text-align: left; border: 0; background: transparent; border-radius: 4px; padding: 10px 8px; }
 .menu button:hover { background: var(--soft); }
@@ -207,7 +208,6 @@ input[type=range] { width: 100%; margin: 10px 0 0; height: 15px; accent-color: #
 .preview-box p { color: var(--muted); font-size: 10px; line-height: 1.4; margin: 4px 0 5px; }
 .link-button { padding: 1px 0; border: 0; background: none; color: #455529; font-size: 10px; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 .link-button:hover { color: #243209; }
-#knit-controls .brush-label { margin-top: 0; }
 .yarn { margin-top: 9px; }
 .footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 13px 0 16px; color: #616652; font: 10px var(--mono); }
 .footer > span { display: flex; align-items: center; gap: 7px; }

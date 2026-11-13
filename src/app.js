@@ -5,7 +5,8 @@ import {
   proportionalImageSize, resizeImageCorner, orderYarnsByTone,
 } from './design.js';
 import { FONTS, sample, textMask, upgradeSample } from './art.js';
-import { renderKnit } from './knit.js';
+import { KNIT_RATIO, renderKnit } from './knit.js';
+import { ayabPng } from './ayab-png.js';
 import { loadColorSuggestions } from './color-names.js';
 
 const $ = id => document.getElementById(id);
@@ -195,7 +196,7 @@ function updateSelected() {
 }
 
 function layout() {
-  const ratio = mode === 'knit' ? Number($('ratio').value) / 100 : 1;
+  const ratio = mode === 'knit' ? KNIT_RATIO : 1;
   const aspect = project.height * ratio / WIDTH;
   const pad = stage.clientWidth < 600 ? 74 : 94;
   const fit = Math.max(1, Math.min(stage.clientWidth - pad, (stage.clientHeight - 66) / aspect, 520));
@@ -248,7 +249,7 @@ function drawPixels() {
 function drawKnit() {
   if (!knitDirty) return;
   knitDirty = false;
-  renderKnit(knit, visibleDesign, Number($('ratio').value) / 100, $('finish').value);
+  renderKnit(knit, visibleDesign, $('finish').value);
 }
 
 function renderAll() {
@@ -839,7 +840,10 @@ function showLayers() {
       button.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp Alt+ArrowDown');
     }
     button.onclick = () => openObject(index);
-    return button;
+    row.append(button,
+      layerAction('copy', 'Dupliquer', title.textContent, !canDuplicate, () => duplicateLayer(index)),
+      layerAction('trash', 'Supprimer', title.textContent, false, () => deleteLayer(index)));
+    return row;
   }).reverse();
   const listElement = $('object-layers');
   const scroll = listElement.scrollTop;
@@ -1333,15 +1337,22 @@ function filename() {
   return project.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'affiche';
 }
-$('export').onclick = () => {
+async function exportPng(monochrome) {
+  document.querySelector('.export-menu').open = false;
   if (!finishObjectEdit()) return;
   if (!validate(visibleDesign)) { announce('Corrigez les rangées avant l’export.', true); return; }
-  const name = filename() + '-180x' + project.height + '.png';
-  pixel.toBlob(blob => {
-    if (blob) { saveFile(blob, name); announce('PNG exporté : ' + name); }
-    else announce('Impossible de générer le PNG.', true);
-  }, 'image/png');
-};
+  const name = filename() + '-180x' + project.height + (monochrome ? '-ayab.png' : '.png');
+  try {
+    const blob = monochrome ? await ayabPng(visibleDesign) : await new Promise(resolve => pixel.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('PNG vide.');
+    saveFile(blob, name);
+    announce('PNG exporté : ' + name);
+  } catch {
+    announce('Impossible de générer le PNG.', true);
+  }
+}
+$('export').onclick = () => exportPng(false);
+$('export-ayab').onclick = () => exportPng(true);
 function closeMenu() { document.querySelector('.project-menu').open = false; }
 $('save-project').onclick = () => {
   closeMenu();
@@ -1452,14 +1463,12 @@ $('zoom-out').onclick = () => setZoom(zoom / 1.3);
 $('zoom-in').onclick = () => setZoom(zoom * 1.3);
 $('zoom-reset').onclick = () => setZoom(1);
 $('brush').oninput = event => { brush = event.target.valueAsNumber; $('brush-size').value = brush + ' px'; drawGuide(); };
-$('ratio').oninput = () => {
-  $('ratio-label').value = (Number($('ratio').value) / 100).toFixed(2).replace('.', ',') + '×';
-  knitDirty = true;
-  drawKnit();
-  layout();
-};
 $('finish').onchange = () => { knitDirty = true; drawKnit(); };
-document.addEventListener('pointerdown', event => { if (!event.target.closest('.project-menu')) closeMenu(); });
+document.addEventListener('pointerdown', event => {
+  for (const menu of document.querySelectorAll('.project-menu[open], .export-menu[open]')) {
+    if (!menu.contains(event.target)) menu.open = false;
+  }
+});
 document.addEventListener('click', event => {
   if (!objectEdit || event.defaultPrevented || document.querySelector('dialog[open]')) return;
   // Selection can rebuild the object list during the click.
@@ -1480,6 +1489,7 @@ document.addEventListener('keydown', event => {
     }
     if (objectEdit) { closeObject(); refreshArtwork(); }
     closeMenu();
+    document.querySelector('.export-menu').open = false;
     return;
   }
   if (event.target.matches('input, textarea, select, [contenteditable]')) return;

@@ -1,15 +1,17 @@
 import { WIDTH, rgb } from './design.js';
 
-const STEP = 8;
+const STEP = 5;
+export const KNIT_RATIO = 4 / 5;
+const ROW_HEIGHT = STEP * KNIT_RATIO;
 
-function tile(hex, stepY, finish, variant) {
+function tile(hex, finish, variant) {
   const canvas = document.createElement('canvas');
-  canvas.width = STEP; canvas.height = stepY;
+  canvas.width = STEP; canvas.height = ROW_HEIGHT;
   const ctx = canvas.getContext('2d');
   const color = rgb(hex);
   const shift = (variant - 2) * (finish === 'brillant' ? 9 : 5);
   const tone = (factor, offset = 0) => `rgb(${color.map(v => Math.min(255, Math.max(0, Math.round(v * factor + offset + shift)))).join(' ')})`;
-  ctx.scale(STEP / 8, stepY / 8);
+  ctx.scale(STEP / 8, ROW_HEIGHT / 8);
   ctx.fillStyle = tone(.52);
   ctx.fillRect(0, 0, 8, 8);
   ctx.lineCap = 'round';
@@ -38,17 +40,16 @@ function tile(hex, stepY, finish, variant) {
   return canvas;
 }
 
-export function renderKnit(canvas, design, ratio, finish) {
-  const stepY = Math.round(STEP * ratio);
+export function renderKnit(canvas, design, finish) {
   canvas.width = WIDTH * STEP;
-  canvas.height = design.height * stepY;
+  canvas.height = design.height * ROW_HEIGHT;
   const ctx = canvas.getContext('2d', { alpha: false });
-  const swatches = design.palette.map(c => Array.from({ length: 5 }, (_, i) => tile(c.hex, stepY, finish, i)));
+  const swatches = design.palette.map(c => Array.from({ length: 5 }, (_, i) => tile(c.hex, finish, i)));
   let noise = 849;
   for (let y = 0, i = 0; y < design.height; y++) {
     for (let x = 0; x < WIDTH; x++, i++) {
       noise = (noise * 1664525 + 1013904223) >>> 0;
-      ctx.drawImage(swatches[design.pixels[i]][(noise >>> 16) % 5], x * STEP, y * stepY);
+      ctx.drawImage(swatches[design.pixels[i]][(noise >>> 16) % 5], x * STEP, y * ROW_HEIGHT);
     }
   }
 }

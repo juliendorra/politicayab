@@ -9,6 +9,7 @@ const routes = new Map([
   ['/src/design.js', ['src/design.js', 'text/javascript']],
   ['/src/art.js', ['src/art.js', 'text/javascript']],
   ['/src/knit.js', ['src/knit.js', 'text/javascript']],
+  ['/src/ayab-png.js', ['src/ayab-png.js', 'text/javascript']],
   ['/src/color-names.js', ['src/color-names.js', 'text/javascript']],
   ['/src/data/color-names.tsv', ['src/data/color-names.tsv', 'text/tab-separated-values']],
   ['/src/data/yarn-swatches.tsv', ['src/data/yarn-swatches.tsv', 'text/tab-separated-values']],

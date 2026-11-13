@@ -63,13 +63,16 @@ manuellement depuis GitHub Actions.
   longues séquences des rangées à deux fils, bords compris. Le réglage
   s’applique à l’affiche affichée et au PNG. Le projet garde le dessin
   d’origine pour permettre de changer de seuil ou de désactiver les points.
-- **Tricot** : l’aperçu sur carton permet de comparer les proportions des
-  mailles et l’aspect mat ou brillant. Le rendu est indicatif.
-- **PNG** : l’export est opaque, à taille réelle, avec un pixel par maille,
-  dans les couleurs de la palette. Les modes AYAB à deux couleurs pour
-  l’image entière attendent un motif en noir et blanc
-  ([manuel AYAB](https://manual.ayab-knitting.com/1.0/pattern_image_creation/)).
-  Le fichier d’atelier n’encode aucun réglage machine.
+- **Tricot** : l’aperçu sur carton utilise des mailles au ratio AYAB de 4:5
+  (hauteur sur largeur), avec un aspect mat ou brillant.
+- **PNG** : les deux exports sont opaques, à taille réelle, avec un pixel par
+  maille. Le PNG couleur garde la palette. Le PNG AYAB est indexé en noir et
+  blanc sur 1 bit. Il représente le fond en blanc et l’autre fil de la rangée
+  en noir. Si une rangée bicolore utilise deux fils autres que le fond, le
+  plus clair des deux devient blanc. Si le fil de fond est absent de toute
+  l’affiche, le fil utilisé le plus clair tient son rôle. Le fichier
+  n’encode aucun réglage machine.
+  ([manuel AYAB](https://manual.ayab-knitting.com/1.0/pattern_image_creation/))
 - **Projet** : l’atelier enregistre la dernière affiche dans le navigateur.
   Le menu « Projet » permet de télécharger et de rouvrir le fichier JSON
   éditable. Les images importées restent dans le navigateur.
