@@ -818,7 +818,10 @@ function finishObjectEdit() {
 
 function showLayers() {
   const canReorder = project.layers.length > 1;
+  const canDuplicate = project.layers.length < MAX_LAYERS;
   const list = project.layers.map((layer, index) => {
+    const row = document.createElement('div');
+    row.className = 'object-row';
     const button = document.createElement('button');
     button.className = 'object-layer';
     button.type = 'button';
@@ -846,9 +849,51 @@ function showLayers() {
   $('object-order-hint').hidden = !canReorder;
   $('object-panel').hidden = !list.length && !objectEdit;
   $('object-form').hidden = !objectEdit;
-  $('add-text').disabled = $('text-tool').disabled = list.length >= MAX_LAYERS;
+  $('add-text').disabled = $('text-tool').disabled = !canDuplicate;
   $('text-tool').setAttribute('aria-pressed', objectEdit?.layer.type === 'text');
-  $('delete-object').hidden = objectEdit?.index == null;
+}
+
+function layerAction(symbol, label, name, disabled, action) {
+  const button = document.createElement('button');
+  button.className = 'icon-button object-action';
+  button.type = 'button';
+  button.title = label;
+  button.disabled = disabled;
+  button.setAttribute('aria-label', label + ' « ' + name + ' »');
+  button.append(icon(symbol));
+  button.onclick = action;
+  return button;
+}
+
+function focusLayer(index) {
+  (objectList.querySelector(`[data-layer-index="${index}"]`) ?? $('text-tool')).focus();
+}
+
+function duplicateLayer(index) {
+  if (!finishObjectEdit() || project.layers.length >= MAX_LAYERS) return;
+  const layer = project.layers[index];
+  if (!layer) return;
+  const layers = project.layers.slice();
+  layers.splice(index + 1, 0, { ...layer });
+  swap({ ...project, layers });
+  openObject(index + 1);
+  focusLayer(index + 1);
+  announce('Objet dupliqué.');
+}
+
+function deleteLayer(index) {
+  if (objectEdit?.index !== index && !finishObjectEdit()) return;
+  const layers = project.layers.slice();
+  layers.splice(index, 1);
+  const next = { ...project, layers };
+  if (compose(next).rejected.size) {
+    announce('La suppression ferait apparaître une troisième couleur sous un autre objet.', true);
+    return;
+  }
+  if (objectEdit) closeObject();
+  swap(next);
+  focusLayer(Math.min(index, layers.length - 1));
+  announce('Objet supprimé.');
 }
 
 function reorderLayer(from, to) {
@@ -923,11 +968,11 @@ function scrollWhileDraggingLayer() {
 objectList.addEventListener('pointerdown', event => {
   suppressLayerClick = false;
   if (event.button !== 0 || !event.isPrimary || project.layers.length < 2) return;
-  const row = event.target.closest('.object-layer');
-  if (!row || (event.pointerType === 'touch' && !event.target.closest('.object-grip'))) return;
+  const button = event.target.closest('.object-layer');
+  if (!button || (event.pointerType === 'touch' && !event.target.closest('.object-grip'))) return;
   const origin = { x: event.clientX, y: event.clientY };
-  draggedLayer = { row, index: Number(row.dataset.layerIndex), pointerId: event.pointerId, origin, active: false };
-  row.setPointerCapture(event.pointerId);
+  draggedLayer = { row: button.closest('.object-row'), index: Number(button.dataset.layerIndex), pointerId: event.pointerId, origin, active: false };
+  button.setPointerCapture(event.pointerId);
 });
 objectList.addEventListener('pointermove', event => {
   if (draggedLayer?.pointerId !== event.pointerId) return;
@@ -1193,16 +1238,6 @@ for (const id of ['text-value', 'font', 'text-color', 'image-color-mode', 'image
   $(id).onchange = commitObject;
 }
 $('cancel-object').onclick = () => { closeObject(); refreshArtwork(); };
-$('delete-object').onclick = () => {
-  if (!objectEdit || objectEdit.index === null) return;
-  const next = withObjectDraft(null);
-  if (compose(next).rejected.size) {
-    announce('La suppression ferait apparaître une troisième couleur sous un autre objet.', true);
-    return;
-  }
-  closeObject();
-  swap(next);
-};
 $('object-form').onsubmit = event => {
   event.preventDefault();
   finishObjectEdit();

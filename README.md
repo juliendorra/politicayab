@@ -45,7 +45,9 @@ manuellement depuis GitHub Actions.
   pour changer sa taille. Les images gardent leurs proportions tant que
   « Conserver les proportions » est cochée. Les réglages de fils et de typographie restent
   accessibles. Glissez les objets dans la liste pour changer leur ordre,
-  avec le premier plan en haut. Les changements valides sont sauvegardés
+  avec le premier plan en haut. La liste permet de dupliquer ou de supprimer
+  chaque objet. Une copie se place au même endroit, juste au-dessus de son
+  original, et reste éditable. Les changements valides sont sauvegardés
   au fur et à mesure. Cliquez à côté pour désélectionner. La conversion des
   images tient compte des fils déjà présents hors de l’image et sous les
   pixels transparents. Avec deux fils choisis, les échantillons indiquent
